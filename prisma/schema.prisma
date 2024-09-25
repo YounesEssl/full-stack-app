@@ -1,0 +1,52 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String?
+  email         String    @unique
+  password      String
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  surveys       Survey[]  // Relation avec les sondages
+  ratings       Rating[]  // Relation avec les évaluations
+}
+
+model Survey {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime   @default(now())
+  userId      Int?       // Laissez temporairement nullable
+  user        User?      @relation(fields: [userId], references: [id])
+  questions   Question[] // Relation avec les questions
+  ratings     Rating[]   // Relation avec les évaluations
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  text      String
+  surveyId  Int
+  survey    Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade) // Suppression en cascade
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  userId    Int
+  surveyId  Int
+  user      User     @relation(fields: [userId], references: [id])
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+
+  @@unique([userId, surveyId])
+}
+
